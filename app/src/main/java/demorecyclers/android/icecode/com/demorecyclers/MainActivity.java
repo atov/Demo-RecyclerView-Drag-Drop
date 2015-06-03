@@ -8,10 +8,13 @@ package demorecyclers.android.icecode.com.demorecyclers;
 import android.content.ClipData;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v4.view.GestureDetectorCompat;
+import android.support.v4.view.MotionEventCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.view.DragEvent;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -39,10 +42,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private static final int OP_TO_FREE = 0;
     private static final int OP_ASSIGN  = 1;
 
+    private GestureDetectorCompat mDetector;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mDetector = new GestureDetectorCompat(this , new RecyclerViewOnGestureListener());
 
         Timber.plant(new Timber.DebugTree());
         oneLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
@@ -54,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         super.onPostCreate(savedInstanceState);
 
         data1.add(new DemoData( R.mipmap.icn_demo_1 ,DemoData.SELECCIONADO ));
-        data1.add(new DemoData( R.mipmap.icn_demo_2 ,DemoData.SELECCIONADO ));
+        data1.add(new DemoData(R.mipmap.icn_demo_2, DemoData.SELECCIONADO));
         data1.add(new DemoData( R.mipmap.icn_demo_3 ,DemoData.SELECCIONADO ));
         data1.add(new DemoData( R.mipmap.icn_demo_4 ,DemoData.SELECCIONADO ));
 
@@ -63,19 +70,60 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         oneRecycler = (RecyclerView) findViewById(R.id.one);
         oneRecycler.setLayoutManager(oneLayoutManager);
         oneRecycler.setOnDragListener(this);
+        /*oneRecycler.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+
+            @Override
+            public boolean onInterceptTouchEvent(RecyclerView view, MotionEvent motionEvent) {
+                Timber.v("**Touch onInterceptTouchEvent");
+
+                int action = MotionEventCompat.getActionMasked(motionEvent);
+                showEvent(action , "View ");
+
+                return mDetector.onTouchEvent(motionEvent);
+            }
+            @Override
+            public void onTouchEvent(RecyclerView view, MotionEvent motionEvent) {
+                //Timber.v("Touch onTouchEvent view: "+view);
+            }
+            @Override
+            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+            }
+        });*/
+
         adapterSimple1 = new AdapterSimple(this, data1);
         oneRecycler.setAdapter(adapterSimple1);
-
-
 
         twoRecycler = (RecyclerView) findViewById(R.id.two);
         twoRecycler.setLayoutManager(twoLayoutManager);
         twoRecycler.setOnDragListener(this);
         adapterSimple2 = new AdapterSimple(this, data2);
         twoRecycler.setAdapter(adapterSimple2);
+    }
+    private class RecyclerViewOnGestureListener extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onScroll(MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) {
+            super.onScroll(motionEvent,motionEvent1,v,v1);
+            Timber.d("RecyclerViewOnGestureListener-> onScroll");
+            return true;
+        }
 
+        @Override
+        public boolean onFling(MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) {
+            Timber.d("RecyclerViewOnGestureListener-> onFling");
+            return true;
+        }
     }
 
+    /*if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                      *//*ClipData data = ClipData.newPlainText("", "");
+                    View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view);
+                    view.startDrag(data, shadowBuilder, view, 0);
+                    view.setVisibility(View.INVISIBLE);*//*
+                    return true;
+                } else {
+                    return false;
+                }*/
+    //return false;
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -228,6 +276,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         }
     }
 
+
+
     class DemoData {
         public static final int SELECCIONADO = 0;
         public static final int DISPONIBLE   = 1;
@@ -237,6 +287,26 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         public DemoData(Integer resource , Integer asigned){
             this.resource = resource;
             this.asigned = asigned;
+        }
+    }
+
+    public static void showEvent(int action , String extra){
+        switch(action) {
+            case (MotionEvent.ACTION_DOWN) :
+                Timber.d(extra+"Action was DOWN");
+
+            case (MotionEvent.ACTION_MOVE) :
+                Timber.d(extra+"Action was MOVE");
+
+            case (MotionEvent.ACTION_UP) :
+                Timber.d(extra+"Action was UP");
+
+            case (MotionEvent.ACTION_CANCEL) :
+                Timber.d(extra+"Action was CANCEL");
+
+            case (MotionEvent.ACTION_OUTSIDE) :
+                Timber.d(extra+"Movement occurred outside bounds " +
+                        "of current screen element");
         }
     }
 }

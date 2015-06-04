@@ -21,6 +21,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -60,35 +61,16 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-        data1.add(new DemoData( R.mipmap.icn_demo_1 ,DemoData.SELECCIONADO ));
-        data1.add(new DemoData(R.mipmap.icn_demo_2, DemoData.SELECCIONADO));
-        data1.add(new DemoData( R.mipmap.icn_demo_3 ,DemoData.SELECCIONADO ));
-        data1.add(new DemoData( R.mipmap.icn_demo_4 ,DemoData.SELECCIONADO ));
+        data1.add(new DemoData( R.mipmap.icn_demo_1 ,DemoData.SELECCIONADO , DemoData.STATUS_OK ));
+        data1.add(new DemoData(R.mipmap.icn_demo_2, DemoData.SELECCIONADO , DemoData.STATUS_OK));
+        data1.add(new DemoData( R.mipmap.icn_demo_3 ,DemoData.SELECCIONADO , DemoData.STATUS_OK ));
+        data1.add(new DemoData( R.mipmap.icn_demo_4 ,DemoData.SELECCIONADO, DemoData.STATUS_OK ));
 
 
 
         oneRecycler = (RecyclerView) findViewById(R.id.one);
         oneRecycler.setLayoutManager(oneLayoutManager);
         oneRecycler.setOnDragListener(this);
-        /*oneRecycler.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
-
-            @Override
-            public boolean onInterceptTouchEvent(RecyclerView view, MotionEvent motionEvent) {
-                Timber.v("**Touch onInterceptTouchEvent");
-
-                int action = MotionEventCompat.getActionMasked(motionEvent);
-                showEvent(action , "View ");
-
-                return mDetector.onTouchEvent(motionEvent);
-            }
-            @Override
-            public void onTouchEvent(RecyclerView view, MotionEvent motionEvent) {
-                //Timber.v("Touch onTouchEvent view: "+view);
-            }
-            @Override
-            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-            }
-        });*/
 
         adapterSimple1 = new AdapterSimple(this, data1);
         oneRecycler.setAdapter(adapterSimple1);
@@ -114,15 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         }
     }
 
-    /*if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                      *//*ClipData data = ClipData.newPlainText("", "");
-                    View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view);
-                    view.startDrag(data, shadowBuilder, view, 0);
-                    view.setVisibility(View.INVISIBLE);*//*
-                    return true;
-                } else {
-                    return false;
-                }*/
+
     //return false;
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -151,11 +125,57 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         Drawable enterShape = getResources().getDrawable(R.drawable.drope_shape_droptarget);
         Drawable normalShape = getResources().getDrawable(R.drawable.drop_shape);
 
+        List<DemoData> dataSelected = new ArrayList<>(data1);
+        List<DemoData> dataUnselected = new ArrayList<>(data2);
 
         int action = event.getAction();
         switch (event.getAction()) {
             case DragEvent.ACTION_DRAG_STARTED:
-                // do nothing
+                Toast.makeText(MainActivity.this , "DRAG_STARTED" , Toast.LENGTH_SHORT).show();
+
+                //Aqui debemos modificar el adapter contrario
+
+                //Paso 1 . Determinar que data-adapter debemos modificar
+                DemoData dataPick = null;
+                AdapterSimple originAdapter = null, destinationAdapter = null;
+                List<DemoData> originData = new ArrayList<>();
+                List<DemoData> destinationData = new ArrayList<>();
+
+                try {
+                    dataPick = (DemoData)v.getTag();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                Timber.d("We had v: "+dataPick);
+                if (dataPick != null){
+                    switch (dataPick.asigned){
+                        case DemoData.SELECCIONADO:
+                            //significa que el listado origen
+
+                            originData      = new ArrayList<>(data1);
+                            destinationData = new ArrayList<>(data2);
+
+
+
+                            break;
+                        case DemoData.DISPONIBLE:
+                            originData      = new ArrayList<>(data1);
+                            destinationData = new ArrayList<>(data2);
+                            break;
+                    }
+                    // Paso 2. Ya que tenemos la direccion , habra que agregar un item "fantasma" en la segunda posicion
+
+
+                }
+
+
+
+
+
+
+                // Paso 3.
+
                 break;
             case DragEvent.ACTION_DRAG_ENTERED:
                 v.setBackgroundDrawable(enterShape);
@@ -178,9 +198,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
                 Timber.e("Tag del view es: "+data);
                 int operation = -1;
-                List<DemoData> dataSelected = new ArrayList<>(data1);
-                List<DemoData> dataUnselected = new ArrayList<>(data2);
-
 
                 if (data != null){
                     //Ahora trataremos de asignar
@@ -281,12 +298,16 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     class DemoData {
         public static final int SELECCIONADO = 0;
         public static final int DISPONIBLE   = 1;
+        public static final int STATUS_FANTASMA     = -1;
+        public static final int STATUS_OK           = 0;
         public Integer resource;
         public Integer asigned;
+        public Integer status = STATUS_FANTASMA;
 
-        public DemoData(Integer resource , Integer asigned){
+        public DemoData(Integer resource , Integer asigned , Integer statusDefault){
             this.resource = resource;
             this.asigned = asigned;
+            this.status = statusDefault;
         }
     }
 
